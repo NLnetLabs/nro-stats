@@ -126,14 +126,30 @@ def fetch_arin_nrostats(day):
 	# March 5, 2013. To top it of, until September 30,
 	# 2007, the files are gzipped, after that, they're
 	# just plain ASCII text.
+    #
+    # 2020-04-30:
+    # Turns out that from 2017 onward the ARIN files
+    # do reside in a single directory and not in the
+    # "archive" directory... go figure...
 	subdir = None
 	filename_prefix = None
 	filename_postfix = None
 	
 	today = datetime.date.today()
 
-	if day.year < today.year - 1:
+	if day.year < 2017:
 		subdir = 'archive/{}'.format(day.year)
+
+	# The archive at the RIPE NCC misses data for 
+	# certain dates which we replace with newer
+	# data
+	missing_dateranges = []
+	missing_dateranges.append((datetime.date(2019,8,25), datetime.date(2019,8,25), datetime.date(2019,8,26)))
+
+	for daterange in missing_dateranges:
+		if day >= daterange[0] and day <= daterange[1]:
+			print('{} is missing for ARIN, replacing it by {}'.format(day, daterange[2]))
+			day = daterange[2]
 
 	if day >= datetime.date(2013,3,5):
 		filename_prefix = 'delegated-arin-extended'
@@ -230,6 +246,7 @@ def fetch_apnic_nrostats(day):
 	exception_dates.append((datetime.date(2015,12,31), 2016))
 	exception_dates.append((datetime.date(2016,12,31), 2017))
 	exception_dates.append((datetime.date(2017,12,31), 2018))
+	exception_dates.append((datetime.date(2018,12,31), 2019))
 
 	year = day.year
 
@@ -278,6 +295,20 @@ def fetch_lacnic_nrostats(day):
 		fd.close()
 
 		return tmpfile
+
+	# The archive at the RIPE NCC misses data for 
+	# certain dates which we replace with newer
+	# data
+	missing_dateranges = []
+	missing_dateranges.append((datetime.date(2018,9,26), datetime.date(2018,9,26), datetime.date(2018,9,27)))
+	missing_dateranges.append((datetime.date(2018,11,10), datetime.date(2018,11,10), datetime.date(2018,11,11)))
+	missing_dateranges.append((datetime.date(2019,12,21), datetime.date(2019,12,21), datetime.date(2019,12,22)))
+	missing_dateranges.append((datetime.date(2020,4,22), datetime.date(2020,4,22), datetime.date(2020,4,23)))
+
+	for daterange in missing_dateranges:
+		if day >= daterange[0] and day <= daterange[1]:
+			print('{} is missing for LACNIC, replacing it by {}'.format(day, daterange[2]))
+			day = daterange[2]
 
 	# The LACNIC data should all be in a single
 	# directory, without any exceptions
